@@ -173,26 +173,27 @@ function checkIn() {
 
       status.innerText = "💾 กำลังบันทึกข้อมูล...";
 
-      fetch("save_checkin.php", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: "distance=" + encodeURIComponent(distance)
-      })
-      .then(r => r.text())
-      .then(r => {
-        r = r.trim();
+     fetch("save_checkin.php", {
+  method: "POST",
+  credentials: "include",
+  headers: {
+    "Content-Type": "application/x-www-form-urlencoded"
+  },
+  body: "distance=" + encodeURIComponent(distance)
+})
+.then(r => r.text())
+.then(r => {
+  r = r.trim();
+  console.log("SERVER:", r);
 
-        if (r.startsWith("OK")) {
-          status.innerText = "✅ เช็คอินสำเร็จ\n" + r.replace("OK|", "");
-        } else if (r === "ALREADY") {
-          status.innerText = "⚠️ วันนี้คุณเช็คอินแล้ว";
-        } else {
-          status.innerText = "❌ บันทึกไม่สำเร็จ\n" + r;
-        }
-      });
+  if (r.startsWith("OK")) {
+    status.innerText = "✅ เช็คอินสำเร็จ\nเวลา: " + r.split("|")[1];
+  } else if (r === "ALREADY") {
+    status.innerText = "⚠️ วันนี้คุณเช็คอินแล้ว";
+  } else {
+    status.innerText = "❌ บันทึกไม่สำเร็จ\n" + r;
+  }
+});
     },
     () => status.innerText = "❌ ไม่สามารถดึง GPS ได้"
   );
@@ -215,3 +216,4 @@ function getDistance(lat1, lon1, lat2, lon2) {
 
 </body>
 </html>
+
