@@ -2,6 +2,7 @@
 ini_set('session.cookie_samesite', 'None');
 ini_set('session.cookie_secure', '1');
 session_start();
+
 if (!isset($_SESSION["employee_id"])) {
   header("Location: login.php");
   exit;
@@ -15,40 +16,11 @@ if (!isset($_SESSION["employee_id"])) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-  /* ===== Mobile Responsive ===== */
-@media (max-width: 480px) {
-
-  body {
-    padding: 12px;
-  }
-
-  .container {
-    padding: 16px;
-    border-radius: 12px;
-  }
-
-  h2 {
-    font-size: 20px;
-    margin-bottom: 10px;
-  }
-
-  .user {
-    font-size: 14px;
-    margin-bottom: 16px;
-  }
-
-  .btn {
-    padding: 12px;          /* เตี้ยลง */
-    font-size: 15px;
-    margin-bottom: 12px;    /* เว้นห่างขึ้น */
-  }
-
-  #status {
-    font-size: 14px;
-    padding: 12px;
-    margin-top: 18px;
-  }
+/* ===== Base ===== */
+* {
+  box-sizing: border-box;
 }
+
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
@@ -60,77 +32,124 @@ body {
   margin: auto;
   background: #fff;
   padding: 24px;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0,0,0,.08);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.1);
 }
 
+/* ===== Header ===== */
 h2 {
   text-align: center;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
 }
 
 .user {
   text-align: center;
   color: #555;
+  font-size: 15px;
   margin-bottom: 20px;
 }
 
+/* ===== Actions ===== */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .btn {
+  display: block;
   width: 100%;
   padding: 14px;
   font-size: 16px;
-  border-radius: 12px;
+  border-radius: 14px;
   border: none;
   cursor: pointer;
   color: #fff;
-  margin-bottom: 10px;
+  text-align: center;
+  text-decoration: none;
 }
 
-.btn-blue { background: #2563eb; }
+.btn-blue  { background: #2563eb; }
 .btn-green { background: #16a34a; }
-.btn-red { background: #dc2626; }
-.btn-gray { background: #6b7280; }
+.btn-gray  { background: #6b7280; }
+.btn-red   { background: #dc2626; }
 
+/* ===== Status ===== */
 #status {
-  margin-top: 15px;
+  margin-top: 20px;
   background: #f8fafc;
   padding: 14px;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid #e5e7eb;
   font-size: 15px;
   white-space: pre-line;
+  text-align: center;
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 480px) {
+  body {
+    padding: 12px;
+  }
+
+  .container {
+    padding: 18px;
+    border-radius: 14px;
+  }
+
+  h2 {
+    font-size: 20px;
+  }
+
+  .btn {
+    font-size: 15px;
+    padding: 12px;
+  }
+
+  #status {
+    font-size: 14px;
+  }
 }
 </style>
 </head>
 
 <body>
-  <div class="container">
 
-<h2>ระบบเช็คเวลาเข้างาน</h2>
+<div class="container">
 
-<p>
-  ผู้ใช้งาน:
-  <b><?= htmlspecialchars($_SESSION["fullname"]) ?></b>
-</p>
+  <h2>ระบบเช็คเวลาเข้างาน</h2>
 
-<button class="btn btn-blue" onclick="checkIn()">📍 เช็คอิน</button>
-<a href="report.php" class="btn btn-green">📄 ดูประวัติการเข้างาน</a>
+  <div class="user">
+    ผู้ใช้งาน: <b><?= htmlspecialchars($_SESSION["fullname"]) ?></b>
+  </div>
 
-<?php if ($_SESSION["role"] === "admin"): ?>
-  <a href="admin.php" class="btn btn-gray">👑 หน้า Admin</a>
-<?php endif; ?>
+  <div class="actions">
+    <button class="btn btn-blue" onclick="checkIn()">📍 เช็คอิน</button>
 
-<a href="logout.php" class="btn btn-red">🚪 ออกจากระบบ</a>
+    <a href="report.php" class="btn btn-green">
+      📄 ดูประวัติการเข้างาน
+    </a>
 
-<div id="status">ยังไม่ได้เช็คอิน</div>
-    </div>
+    <?php if ($_SESSION["role"] === "admin"): ?>
+      <a href="admin.php" class="btn btn-gray">
+        👑 หน้า Admin
+      </a>
+    <?php endif; ?>
+
+    <a href="logout.php" class="btn btn-red">
+      🚪 ออกจากระบบ
+    </a>
+  </div>
+
+  <div id="status">ยังไม่ได้เช็คอิน</div>
+
+</div>
 
 <script>
 const officeLat = 16.32803442485856;
 const officeLng = 103.30575654156942;
 const allowedRadius = 150;
 const maxAccuracy = 100;
-const workStartTime = "08:00:00";
 
 function checkIn() {
   const status = document.getElementById("status");
@@ -138,16 +157,15 @@ function checkIn() {
 
   navigator.geolocation.getCurrentPosition(
     pos => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      const accuracy = pos.coords.accuracy;
+      const { latitude, longitude, accuracy } = pos.coords;
 
       if (accuracy > maxAccuracy) {
         status.innerText = `⚠️ GPS ยังไม่แม่น (${accuracy.toFixed(1)} m)`;
         return;
       }
 
-      const distance = getDistance(lat, lng, officeLat, officeLng);
+      const distance = getDistance(latitude, longitude, officeLat, officeLng);
+
       if (distance > allowedRadius) {
         status.innerText = `❌ อยู่นอกพื้นที่ (${distance.toFixed(1)} m)`;
         return;
@@ -157,7 +175,7 @@ function checkIn() {
 
       fetch("save_checkin.php", {
         method: "POST",
-        credentials: "include", // ✅ สำคัญ
+        credentials: "include",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded"
         },
@@ -166,10 +184,9 @@ function checkIn() {
       .then(r => r.text())
       .then(r => {
         r = r.trim();
-        console.log("SERVER:", r);
 
         if (r.startsWith("OK")) {
-          status.innerText = r.replace("OK|", "✅ เช็คอินสำเร็จ\n");
+          status.innerText = "✅ เช็คอินสำเร็จ\n" + r.replace("OK|", "");
         } else if (r === "ALREADY") {
           status.innerText = "⚠️ วันนี้คุณเช็คอินแล้ว";
         } else {
@@ -183,20 +200,18 @@ function checkIn() {
 
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371000;
-  const dLat = (lat2-lat1)*Math.PI/180;
-  const dLon = (lon2-lon1)*Math.PI/180;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+
   const a =
-    Math.sin(dLat/2)**2 +
-    Math.cos(lat1*Math.PI/180) *
-    Math.cos(lat2*Math.PI/180) *
-    Math.sin(dLon/2)**2;
-  return R * (2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)));
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) *
+    Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) ** 2;
+
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 </script>
 
 </body>
 </html>
-
-
-
-
