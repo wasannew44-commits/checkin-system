@@ -70,6 +70,7 @@ h2 {
 </head>
 
 <body>
+  <div class="container">
 
 <h2>ระบบเช็คเวลาเข้างาน</h2>
 
@@ -87,7 +88,8 @@ h2 {
 
 <a href="logout.php" class="btn btn-red">🚪 ออกจากระบบ</a>
 
-<p id="status">ยังไม่ได้เช็คอิน</p>
+<div id="status">ยังไม่ได้เช็คอิน</div>
+    </div>
 
 <script>
 const officeLat = 16.32803442485856;
@@ -107,46 +109,41 @@ function checkIn() {
       const accuracy = pos.coords.accuracy;
 
       if (accuracy > maxAccuracy) {
-        status.innerText = "⚠️ GPS ยังไม่แม่น (" + accuracy.toFixed(1) + " m)";
+        status.innerText = `⚠️ GPS ยังไม่แม่น (${accuracy.toFixed(1)} m)`;
         return;
       }
 
       const distance = getDistance(lat, lng, officeLat, officeLng);
       if (distance > allowedRadius) {
-        status.innerText = "❌ อยู่นอกพื้นที่ (" + distance.toFixed(1) + " m)";
+        status.innerText = `❌ อยู่นอกพื้นที่ (${distance.toFixed(1)} m)`;
         return;
       }
 
       status.innerText = "💾 กำลังบันทึกข้อมูล...";
 
       fetch("save_checkin.php", {
-  method: "POST",
-  credentials: "same-origin", // ⭐ ส่ง session cookie ไปด้วย
-  headers: {"Content-Type": "application/x-www-form-urlencoded"},
-  body: "distance=" + encodeURIComponent(distance)
-})
+        method: "POST",
+        credentials: "include", // ✅ สำคัญ
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: "distance=" + encodeURIComponent(distance)
+      })
       .then(r => r.text())
-.then(r => {
-  r = r.trim();
-  console.log("SERVER:", r);
+      .then(r => {
+        r = r.trim();
+        console.log("SERVER:", r);
 
-  if (r.trim() === "OK") {
-          const now = new Date().toTimeString().substring(0,8);
-          status.innerText =
-            "✅ เช็คอินสำเร็จ\n" +
-            "เวลา: " + now + "\n" +
-            "ระยะ: " + distance.toFixed(1) + " เมตร\n\n" +
-            (now > workStartTime
-              ? "⚠️ ทำไมถึงมาทำงานสายย"
-              : "👏 ทำดีก็ทำได้");
+        if (r.startsWith("OK")) {
+          status.innerText = r.replace("OK|", "✅ เช็คอินสำเร็จ\n");
         } else if (r === "ALREADY") {
           status.innerText = "⚠️ วันนี้คุณเช็คอินแล้ว";
         } else {
-          status.innerText = "❌ บันทึกไม่สำเร็จ";
+          status.innerText = "❌ บันทึกไม่สำเร็จ\n" + r;
         }
       });
     },
-    err => status.innerText = "❌ ไม่สามารถดึง GPS ได้"
+    () => status.innerText = "❌ ไม่สามารถดึง GPS ได้"
   );
 }
 
@@ -165,5 +162,6 @@ function getDistance(lat1, lon1, lat2, lon2) {
 
 </body>
 </html>
+
 
 
