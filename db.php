@@ -15,14 +15,13 @@ $conn->real_connect(
     $user,
     $pass,
     $db,
-    $port,
-    $port,
+    (int)$port,
     NULL,
     MYSQLI_CLIENT_SSL
 );
 
 if ($conn->connect_errno) {
-    die("DB_CONNECT_ERROR");
+    die("DB_CONNECT_ERROR: " . $conn->connect_error);
 }
 
 $conn->set_charset("utf8mb4");
