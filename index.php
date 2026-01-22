@@ -15,35 +15,57 @@ if (!isset($_SESSION["employee_id"])) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-  body {
-    font-family: system-ui, -apple-system, sans-serif;
-    padding: 20px;
-    background: #f9fafb;
-  }
-  .btn {
-    padding: 10px 18px;
-    font-size: 16px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    color: #fff;
-    text-decoration: none;
-    display: inline-block;
-    margin-right: 5px;
-    margin-bottom: 8px;
-  }
-  .btn-blue { background: #2563eb; }
-  .btn-green { background: #16a34a; }
-  .btn-red { background: #dc2626; }
-  .btn-gray { background: #6b7280; }
-  #status {
-    margin-top: 15px;
-    background: #fff;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    white-space: pre-line;
-  }
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  padding: 20px;
+}
+
+.container {
+  max-width: 480px;
+  margin: auto;
+  background: #fff;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,.08);
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 5px;
+}
+
+.user {
+  text-align: center;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+.btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.btn-blue { background: #2563eb; }
+.btn-green { background: #16a34a; }
+.btn-red { background: #dc2626; }
+.btn-gray { background: #6b7280; }
+
+#status {
+  margin-top: 15px;
+  background: #f8fafc;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  font-size: 15px;
+  white-space: pre-line;
+}
 </style>
 </head>
 
@@ -143,4 +165,5 @@ function getDistance(lat1, lon1, lat2, lon2) {
 
 </body>
 </html>
+
 
