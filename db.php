@@ -1,4 +1,6 @@
 <?php
+date_default_timezone_set('Asia/Bangkok');
+
 $host = getenv('DB_HOST');
 $user = getenv('DB_USER');
 $pass = getenv('DB_PASSWORD');
@@ -25,3 +27,4 @@ if ($conn->connect_errno) {
 }
 
 $conn->set_charset("utf8mb4");
+
