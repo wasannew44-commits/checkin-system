@@ -3,36 +3,47 @@ session_start();
 require_once "db.php";
 
 if (!isset($_SESSION["employee_id"])) {
-  echo "NOSESSION";
-  exit;
+    echo "NO_SESSION";
+    exit;
 }
 
 $employee_id = $_SESSION["employee_id"];
-$distance = $_POST["distance"] ?? 0;
+$distance = $_POST["distance"] ?? null;
 
-$date = date("Y-m-d");
-$time = date("H:i:s");
-
-/* เช็คซ้ำ */
-$chk = $mysqli->prepare("
-  SELECT id FROM checkins
-  WHERE employee_id = ? AND checkin_date = ?
-");
-$chk->bind_param("is", $employee_id, $date);
-$chk->execute();
-$chk->store_result();
-
-if ($chk->num_rows > 0) {
-  echo "ALREADY";
-  exit;
+if ($distance === null) {
+    echo "NO_DISTANCE";
+    exit;
 }
 
-$stmt = $mysqli->prepare("
-  INSERT INTO checkins (employee_id, checkin_date, checkin_time, distance)
-  VALUES (?, ?, ?, ?)
+$today = date("Y-m-d");
+$time  = date("H:i:s");
+
+/* 🔁 เช็คว่ามีการเช็คอินวันนี้แล้วหรือยัง */
+$check = $mysqli->prepare("
+    SELECT id FROM checkins
+    WHERE employee_id = ? AND checkin_date = ?
 ");
-$stmt->bind_param("issd", $employee_id, $date, $time, $distance);
+$check->bind_param("is", $employee_id, $today);
+$check->execute();
+$check->store_result();
+
+if ($check->num_rows > 0) {
+    echo "ALREADY";
+    exit;
+}
+
+/* ✅ บันทึกเช็คอิน */
+$stmt = $mysqli->prepare("
+    INSERT INTO checkins (employee_id, checkin_date, checkin_time, distance)
+    VALUES (?, ?, ?, ?)
+");
+
+if (!$stmt) {
+    echo "SQL_ERROR|" . $mysqli->error;
+    exit;
+}
+
+$stmt->bind_param("issd", $employee_id, $today, $time, $distance);
 $stmt->execute();
 
-/* ส่งเวลาจาก server กลับไป */
-echo "OK|เวลา: $time\nระยะ: " . number_format($distance,1) . " เมตร";
+echo "OK|$time";
