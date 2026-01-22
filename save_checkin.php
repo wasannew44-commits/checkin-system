@@ -2,6 +2,9 @@
 session_start();
 require_once "db.php";
 
+header("Content-Type: text/plain; charset=utf-8");
+
+/* ตรวจ session */
 if (!isset($_SESSION["employee_id"])) {
     echo "NO_SESSION";
     exit;
@@ -18,7 +21,7 @@ if ($distance === null) {
 $today = date("Y-m-d");
 $time  = date("H:i:s");
 
-/* 🔁 เช็คว่ามีการเช็คอินวันนี้แล้วหรือยัง */
+/* เช็คว่ามีการเช็คอินวันนี้แล้วหรือยัง */
 $check = $mysqli->prepare("
     SELECT id FROM checkins
     WHERE employee_id = ? AND checkin_date = ?
@@ -32,14 +35,14 @@ if ($check->num_rows > 0) {
     exit;
 }
 
-/* ✅ บันทึกเช็คอิน */
+/* บันทึกข้อมูล */
 $stmt = $mysqli->prepare("
     INSERT INTO checkins (employee_id, checkin_date, checkin_time, distance)
     VALUES (?, ?, ?, ?)
 ");
 
 if (!$stmt) {
-    echo "SQL_ERROR|" . $mysqli->error;
+    echo "SQL_ERROR";
     exit;
 }
 
