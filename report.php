@@ -14,6 +14,7 @@ $fullname = $_SESSION["fullname"];
 $month = $_GET["month"] ?? date("m");
 $year  = $_GET["year"]  ?? date("Y");
 
+require_once "db.php";
 $stmt = $conn->prepare("
   SELECT checkin_date, checkin_time, distance
   FROM checkins
@@ -129,3 +130,4 @@ th {
 
 </body>
 </html>
+
