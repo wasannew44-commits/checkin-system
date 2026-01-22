@@ -2,49 +2,53 @@
 session_start();
 require_once "db.php";
 
-header("Content-Type: text/plain; charset=utf-8");
-
 if (!isset($_SESSION["employee_id"])) {
-    echo "NO_SESSION";
-    exit;
+  echo "NO_SESSION";
+  exit;
 }
 
 $employee_id = $_SESSION["employee_id"];
-$distance = $_POST["distance"] ?? null;
-
-if ($distance === null) {
-    echo "NO_DISTANCE";
-    exit;
-}
+$distance = isset($_POST["distance"]) ? floatval($_POST["distance"]) : 0;
 
 $today = date("Y-m-d");
 $time  = date("H:i:s");
 
-/* เช็คซ้ำ */
-$check = $mysqli->prepare(
-    "SELECT id FROM checkins WHERE employee_id = ? AND checkin_date = ?"
-);
+/* เช็คว่ามีเช็คอินวันนี้แล้วหรือยัง */
+$check = $conn->prepare("
+  SELECT id FROM checkins
+  WHERE employee_id = ?
+  AND checkin_date = ?
+");
 $check->bind_param("is", $employee_id, $today);
 $check->execute();
 $check->store_result();
 
 if ($check->num_rows > 0) {
-    echo "ALREADY";
-    exit;
+  echo "ALREADY";
+  exit;
 }
 
-/* บันทึก */
-$stmt = $mysqli->prepare(
-    "INSERT INTO checkins (employee_id, checkin_date, checkin_time, distance)
-     VALUES (?, ?, ?, ?)"
-);
+/* บันทึกเช็คอิน */
+$stmt = $conn->prepare("
+  INSERT INTO checkins (employee_id, checkin_date, checkin_time, distance)
+  VALUES (?, ?, ?, ?)
+");
 
 if (!$stmt) {
-    echo "SQL_ERROR";
-    exit;
+  echo "PREPARE_ERROR";
+  exit;
 }
 
-$stmt->bind_param("issd", $employee_id, $today, $time, $distance);
-$stmt->execute();
+$stmt->bind_param(
+  "issd",
+  $employee_id,
+  $today,
+  $time,
+  $distance
+);
 
-echo "OK|$time";
+if ($stmt->execute()) {
+  echo "OK";
+} else {
+  echo "ERROR";
+}
