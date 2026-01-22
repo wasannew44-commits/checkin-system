@@ -5,21 +5,24 @@ $pass = getenv('DB_PASSWORD');
 $db   = getenv('DB_NAME');
 $port = getenv('DB_PORT');
 
-$mysqli = mysqli_init();
+$conn = mysqli_init();
 
 /* บังคับใช้ SSL */
-$mysqli->ssl_set(NULL, NULL, NULL, NULL, NULL);
+$conn->ssl_set(NULL, NULL, NULL, NULL, NULL);
 
-$mysqli->real_connect(
+$conn->real_connect(
     $host,
     $user,
     $pass,
     $db,
     $port,
+    $port,
     NULL,
     MYSQLI_CLIENT_SSL
 );
 
-if ($mysqli->connect_errno) {
-    die("❌ DB Connection failed: " . $mysqli->connect_error);
+if ($conn->connect_errno) {
+    die("DB_CONNECT_ERROR");
 }
+
+$conn->set_charset("utf8mb4");
