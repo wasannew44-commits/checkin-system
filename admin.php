@@ -4,7 +4,8 @@ if (!isset($_SESSION["employee_id"]) || $_SESSION["role"] !== "admin") {
   header("Location: index.php");
   exit;
 }
-include "db.php";
+require_once "db.php";
+
 
 /* ========== เพิ่มพนักงาน ========== */
 if (isset($_POST["add_employee"])) {
@@ -44,6 +45,10 @@ $employees = $conn->query("
   FROM employees
   ORDER BY fullname
 ");
+if (!$employees) {
+  die("Query failed: " . $conn->error);
+}
+  
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -162,3 +167,4 @@ function resetToday(id) {
 
 </body>
 </html>
+
