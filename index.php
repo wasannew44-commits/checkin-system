@@ -15,6 +15,40 @@ if (!isset($_SESSION["employee_id"])) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
+  /* ===== Mobile Responsive ===== */
+@media (max-width: 480px) {
+
+  body {
+    padding: 12px;
+  }
+
+  .container {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  h2 {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+
+  .user {
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+
+  .btn {
+    padding: 12px;          /* เตี้ยลง */
+    font-size: 15px;
+    margin-bottom: 12px;    /* เว้นห่างขึ้น */
+  }
+
+  #status {
+    font-size: 14px;
+    padding: 12px;
+    margin-top: 18px;
+  }
+}
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
@@ -162,6 +196,7 @@ function getDistance(lat1, lon1, lat2, lon2) {
 
 </body>
 </html>
+
 
 
 
