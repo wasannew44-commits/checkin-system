@@ -150,6 +150,7 @@ const officeLat = 16.32803442485856;
 const officeLng = 103.30575654156942;
 const allowedRadius = 150;
 const maxAccuracy = 100;
+const workStartTime = "08:00:00"; // ⭐ ต้องมีบรรทัดนี้
 
 function checkIn() {
   const status = document.getElementById("status");
@@ -181,15 +182,32 @@ function checkIn() {
   },
   body: "distance=" + encodeURIComponent(distance)
 })
-.then(r => r.text())
+.then(res => res.text())   // ✅ ต้องมี
 .then(r => {
   r = r.trim();
   console.log("SERVER:", r);
 
-  if (r.startsWith("OK")) {
-    status.innerText = "✅ เช็คอินสำเร็จ\nเวลา: " + r.split("|")[1];
+  if (r === "OK") {
+    const now = new Date();
+
+    const time =
+      now.getHours().toString().padStart(2, "0") + ":" +
+      now.getMinutes().toString().padStart(2, "0") + ":" +
+      now.getSeconds().toString().padStart(2, "0");
+
+    const late =
+      time > workStartTime
+        ? "⚠️ ทำไมถึงมาทำงานสายยย"
+        : "👏 ทำดีก็ทำได้สุดยอด!!";
+
+    status.innerText =
+      "✅ เช็คอินสำเร็จ\n" +
+      "เวลา: " + time + "\n\n" +
+      late;
+
   } else if (r === "ALREADY") {
     status.innerText = "⚠️ วันนี้คุณเช็คอินแล้ว";
+
   } else {
     status.innerText = "❌ บันทึกไม่สำเร็จ\n" + r;
   }
@@ -216,4 +234,5 @@ function getDistance(lat1, lon1, lat2, lon2) {
 
 </body>
 </html>
+
 
