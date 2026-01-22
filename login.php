@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once "db.php"; // ใช้ require_once ดีกว่า include
+require_once "db.php";
 
 // ฟังก์ชันสร้าง device_id จาก browser
 function getDeviceId() {
@@ -20,15 +20,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $password  = $_POST["password"] ?? '';
     $device_id = getDeviceId();
 
-    // ✅ ใช้ $mysqli (ตรงกับ db.php)
-    $stmt = $mysqli->prepare("
+    // ✅ ใช้ $conn เท่านั้น
+    $stmt = $conn->prepare("
         SELECT id, fullname, role, device_id
         FROM employees
         WHERE username = ? AND password = SHA2(?,256)
     ");
 
     if (!$stmt) {
-        die("SQL prepare failed: " . $mysqli->error);
+        die("SQL prepare failed: " . $conn->error);
     }
 
     $stmt->bind_param("ss", $username, $password);
@@ -39,12 +39,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         // 🔐 ยังไม่เคยผูกเครื่อง
         if (empty($user["device_id"])) {
-            $update = $mysqli->prepare(
+            $update = $conn->prepare(
                 "UPDATE employees SET device_id = ? WHERE id = ?"
             );
 
             if (!$update) {
-                die("Update prepare failed: " . $mysqli->error);
+                die("Update prepare failed: " . $conn->error);
             }
 
             $update->bind_param("si", $device_id, $user["id"]);
