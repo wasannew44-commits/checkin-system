@@ -105,8 +105,8 @@ function checkIn() {
 })
       .then(r => r.text())
 .then(r => {
+  r = r.trim();
   console.log("SERVER:", r);
-  alert("SERVER RESPONSE: " + r);
 
   if (r.trim() === "OK") {
           const now = new Date().toTimeString().substring(0,8);
@@ -115,8 +115,8 @@ function checkIn() {
             "เวลา: " + now + "\n" +
             "ระยะ: " + distance.toFixed(1) + " เมตร\n\n" +
             (now > workStartTime
-              ? "⚠️ มาสาย กรุณาตรงเวลา"
-              : "👏 มาตรงเวลา เยี่ยมมาก");
+              ? "⚠️ ทำไมถึงมาทำงานสายย"
+              : "👏 ทำดีก็ทำได้");
         } else if (r === "ALREADY") {
           status.innerText = "⚠️ วันนี้คุณเช็คอินแล้ว";
         } else {
@@ -143,3 +143,4 @@ function getDistance(lat1, lon1, lat2, lon2) {
 
 </body>
 </html>
+
