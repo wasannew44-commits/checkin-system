@@ -7,22 +7,14 @@ $pass = getenv('DB_PASSWORD');
 $db   = getenv('DB_NAME');
 $port = getenv('DB_PORT');
 
-$conn = mysqli_init();
-
-/* ⭐ บังคับ SSL (Railway ต้องใช้) */
-mysqli_ssl_set($conn, NULL, NULL, NULL, NULL, NULL);
-
-mysqli_real_connect(
-    $conn,
+$conn = new mysqli(
     $host,
     $user,
     $pass,
     $db,
-    (int)$port,
-    NULL,
-    MYSQLI_CLIENT_SSL
+    (int)$port
 );
 
-if (mysqli_connect_errno()) {
-    die("DB connect failed: " . mysqli_connect_error());
+if ($conn->connect_error) {
+    die("DB connect failed: " . $conn->connect_error);
 }
