@@ -7,7 +7,6 @@ $pass = getenv('DB_PASSWORD');
 $db   = getenv('DB_NAME');
 $port = getenv('DB_PORT');
 
-/* ⭐ ใช้แบบนี้แทน */
 $conn = new mysqli(
     $host,
     $user,
@@ -17,7 +16,5 @@ $conn = new mysqli(
 );
 
 if ($conn->connect_error) {
-    die("❌ DB Connection failed: " . $conn->connect_error);
+    die("DB connect failed: " . $conn->connect_error);
 }
-?>
-
