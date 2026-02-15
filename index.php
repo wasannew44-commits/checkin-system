@@ -57,7 +57,7 @@ window.checkIn = function () {
       const checkinRef = ref(db,"checkins");
 
       push(checkinRef,{
-        employee:"<?= $_SESSION['fullname'] ?>",
+        employee: <?= json_encode($_SESSION['fullname']) ?>,
         time:time,
         timestamp:Date.now(),
         lat:latitude,
@@ -97,4 +97,5 @@ function getDistance(lat1, lon1, lat2, lon2) {
 }
 
 </script>
+
 
