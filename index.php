@@ -1,7 +1,8 @@
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
 
 const officeLat = 16.32803442485856;
 const officeLng = 103.30575654156942;
@@ -97,5 +98,6 @@ function getDistance(lat1, lon1, lat2, lon2) {
 }
 
 </script>
+
 
 
