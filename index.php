@@ -145,12 +145,27 @@ h2 {
 
 </div>
 
-<script>
+<script type="module">
 const officeLat = 16.32803442485856;
 const officeLng = 103.30575654156942;
 const allowedRadius = 150;
 const maxAccuracy = 100;
 const workStartTime = "08:00:00"; // ⭐ ต้องมีบรรทัดนี้
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBr6DpIWx4lws1fHvTSoePy5fcthnybZD8",
+  authDomain: "checkin-system-5b6a4.firebaseapp.com",
+  databaseURL: "https://checkin-system-5b6a4-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "checkin-system-5b6a4",
+  storageBucket: "checkin-system-5b6a4.firebasestorage.app",
+  messagingSenderId: "45265472142",
+  appId: "1:45265472142:web:bc0e732b3968efa42dd7df"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
 function checkIn() {
   const status = document.getElementById("status");
@@ -187,18 +202,30 @@ function checkIn() {
   r = r.trim();
   console.log("SERVER:", r);
 
-  if (r === "OK") {
-    const now = new Date();
+ if (r === "OK") {
 
-    const time =
-      now.getHours().toString().padStart(2, "0") + ":" +
-      now.getMinutes().toString().padStart(2, "0") + ":" +
-      now.getSeconds().toString().padStart(2, "0");
+  const now = new Date();
 
-    const late =
-      time > workStartTime
-        ? "⚠️ ทำไมถึงมาทำงานสายยย"
-        : "👏 ทำดีก็ทำได้สุดยอด!!";
+  const time =
+    now.getHours().toString().padStart(2, "0") + ":" +
+    now.getMinutes().toString().padStart(2, "0") + ":" +
+    now.getSeconds().toString().padStart(2, "0");
+
+  const checkinRef = ref(db, "checkins");
+
+  push(checkinRef, {
+    employee: "<?= $_SESSION["fullname"] ?>",
+    time: time,
+    timestamp: Date.now(),
+    lat: latitude,
+    lng: longitude,
+    distance: distance
+  });
+
+  const late =
+    time > workStartTime
+      ? "⚠️ ทำไมถึงมาทำงานสายยย"
+      : "👏 ทำดีก็ทำได้สุดยอด!!";
 
     status.innerText =
       "✅ เช็คอินสำเร็จ\n" +
@@ -234,5 +261,6 @@ function getDistance(lat1, lon1, lat2, lon2) {
 
 </body>
 </html>
+
 
 
