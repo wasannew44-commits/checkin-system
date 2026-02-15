@@ -7,22 +7,17 @@ $pass = getenv('DB_PASSWORD');
 $db   = getenv('DB_NAME');
 $port = getenv('DB_PORT');
 
-$conn = mysqli_init();
-
-/* ใช้ SSL (Railway / Render ต้องใช้) */
-$conn->ssl_set(NULL, NULL, NULL, NULL, NULL);
-
-$conn->real_connect(
+/* ⭐ ใช้แบบนี้แทน */
+$conn = new mysqli(
     $host,
     $user,
     $pass,
     $db,
-    (int)$port,
-    NULL,
-    MYSQLI_CLIENT_SSL
+    (int)$port
 );
 
-if ($conn->connect_errno) {
+if ($conn->connect_error) {
     die("❌ DB Connection failed: " . $conn->connect_error);
 }
+?>
 
