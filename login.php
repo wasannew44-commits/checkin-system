@@ -1,69 +1,24 @@
 <?php
 session_start();
-require_once "db.php";
-
-// ฟังก์ชันสร้าง device_id
-function getDeviceId() {
-    return hash(
-        'sha256',
-        ($_SERVER['HTTP_USER_AGENT'] ?? '') .
-        ($_SERVER['REMOTE_ADDR'] ?? '') .
-        ($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '')
-    );
-}
 
 $error = null;
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
-    $username  = $_POST["username"] ?? '';
-    $password  = $_POST["password"] ?? '';
-    $device_id = getDeviceId();
+    $username = $_POST["username"] ?? '';
+    $password = $_POST["password"] ?? '';
 
-    // ✅ ใช้ $conn เท่านั้น
-    $stmt = $conn->prepare("
-        SELECT id, fullname, role, device_id
-        FROM employees
-        WHERE username = ? AND password = SHA2(?,256)
-    ");
+    // ⭐ TEMP LOGIN (ยังไม่ใช้ DB)
+    // เปลี่ยนได้ตามต้องการ
 
-    if (!$stmt) {
-        die("SQL prepare failed: " . $conn->error);
-    }
+    if ($username === "admin" && $password === "1234") {
 
-    $stmt->bind_param("ss", $username, $password);
-    $stmt->execute();
-    $result = $stmt->get_result();
+        $_SESSION["employee_id"] = 1;
+        $_SESSION["fullname"] = "ผู้ดูแลระบบ";
+        $_SESSION["role"] = "admin";
 
-    if ($user = $result->fetch_assoc()) {
-
-        // 🔐 ยังไม่เคยผูกอุปกรณ์
-        if (empty($user["device_id"])) {
-            $update = $conn->prepare(
-                "UPDATE employees SET device_id = ? WHERE id = ?"
-            );
-
-            if (!$update) {
-                die("Update prepare failed: " . $conn->error);
-            }
-
-            $update->bind_param("si", $device_id, $user["id"]);
-            $update->execute();
-
-        // ❌ เครื่องไม่ตรง
-        } elseif ($user["device_id"] !== $device_id) {
-            $error = "บัญชีนี้ถูกผูกกับอุปกรณ์อื่น กรุณาติดต่อผู้ดูแลระบบ";
-        }
-
-        // ✅ เข้าได้
-        if (!$error) {
-            $_SESSION["employee_id"] = $user["id"];
-            $_SESSION["fullname"]    = $user["fullname"];
-            $_SESSION["role"]        = $user["role"];
-
-            header("Location: index.php");
-            exit;
-        }
+        header("Location: index.php");
+        exit;
 
     } else {
         $error = "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
@@ -93,5 +48,3 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 </body>
 </html>
-
-
