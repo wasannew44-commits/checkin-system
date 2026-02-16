@@ -1,6 +1,6 @@
 <!-- ส่งชื่อพนักงานจาก PHP -> JS -->
 <script>
-const employeeName = <?= json_encode($_SESSION["fullname"]) ?>;
+const employeeName = "<?php echo htmlspecialchars($_SESSION['fullname'], ENT_QUOTES); ?>";
 </script>
 
 
@@ -107,3 +107,4 @@ function getDistance(lat1, lon1, lat2, lon2) {
 }
 
 </script>
+
