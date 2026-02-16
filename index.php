@@ -1,19 +1,22 @@
 <!-- ส่งชื่อพนักงานจาก PHP -> JS -->
 <script>
-const employeeName = <?php echo json_encode($_SESSION["fullname"]); ?>;
-</script>
 
+const employeeName = <?= json_encode($_SESSION["fullname"] ?? "") ?>;
+
+</script>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
+
 const officeLat = 16.32803442485856;
 const officeLng = 103.30575654156942;
 const allowedRadius = 150;
 const maxAccuracy = 100;
 const workStartTime = "08:00:00";
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyBr6DpIWx4lws1fHvTSoePy5fcthnybZD8",
@@ -29,7 +32,7 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 
-/* ⭐ สำคัญ ต้องประกาศ global */
+/* ⭐ ต้อง global เพราะ onclick */
 window.checkIn = function() {
 
   const status = document.getElementById("status");
@@ -84,7 +87,9 @@ window.checkIn = function() {
         late;
     },
 
-    () => status.innerText = "❌ ไม่สามารถดึง GPS ได้"
+    () => {
+      status.innerText = "❌ ไม่สามารถดึง GPS ได้";
+    }
 
   );
 }
@@ -107,5 +112,3 @@ function getDistance(lat1, lon1, lat2, lon2) {
 }
 
 </script>
-
-
