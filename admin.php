@@ -75,7 +75,7 @@ a { text-decoration:none; }
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const firebaseConfig = {
 apiKey:"AIzaSyBr6DpIWx4lws1fHvTSoePy5fcthnybZD8",
@@ -89,11 +89,10 @@ appId:"1:45265472142:web:bc0e732b3968efa42dd7df"
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-
 const employeeRef = ref(db,"employees");
 
 
-// ⭐ hash password
+// ===== HASH PASSWORD =====
 async function sha256(str){
 
  const buf = await crypto.subtle.digest(
@@ -107,7 +106,7 @@ async function sha256(str){
 }
 
 
-// ⭐ เพิ่มพนักงาน
+// ===== ADD USER =====
 window.addEmployee = async function(){
 
  const fullname=document.getElementById("fullname").value.trim();
@@ -120,7 +119,7 @@ window.addEmployee = async function(){
    return;
  }
 
- push(employeeRef,{
+ await push(employeeRef,{
    fullname,
    username,
    password: await sha256(password),
@@ -133,7 +132,7 @@ window.addEmployee = async function(){
 };
 
 
-// ⭐ โหลดรายชื่อ
+// ===== LOAD LIST =====
 const list=document.getElementById("employeeList");
 
 onValue(employeeRef,(snapshot)=>{
@@ -152,6 +151,7 @@ onValue(employeeRef,(snapshot)=>{
 <td>${row.username}</td>
 <td>${row.role}</td>
 <td>
+<button class="btn-edit" onclick="editEmployee('${key}')">✏️ แก้ไข</button>
 <button class="btn-del" onclick="deleteEmployee('${key}')">🗑️ ลบ</button>
 </td>
 </tr>
@@ -162,7 +162,7 @@ onValue(employeeRef,(snapshot)=>{
 });
 
 
-// ⭐ ลบ
+// ===== DELETE =====
 window.deleteEmployee=function(id){
 
  if(!confirm("ลบพนักงาน?")) return;
@@ -171,9 +171,43 @@ window.deleteEmployee=function(id){
 
 };
 
+
+// ===== EDIT USER =====
+window.editEmployee = async function(id){
+
+ const newName = prompt("ชื่อใหม่:");
+ if(!newName) return;
+
+ const newUser = prompt("username ใหม่:");
+ if(!newUser) return;
+
+ const newPass = prompt("password ใหม่:");
+
+ let updateData = {
+   fullname:newName,
+   username:newUser
+ };
+
+ if(newPass){
+   updateData.password = await sha256(newPass);
+ }
+
+ if(confirm("Reset device (ล็อคเครื่องใหม่)?")){
+   updateData.device_id = "";
+ }
+
+ await update(ref(db,"employees/"+id),updateData);
+
+ alert("แก้ไขเรียบร้อย");
+
+};
+
 </script>
+
+ 
 
 </body>
 </html>
+
 
 
