@@ -28,8 +28,14 @@ border:1px solid #ddd;
 text-align:center;
 }
 
-.late{background:#fecaca;}     /* แดง */
-.early{background:#bbf7d0;}    /* เขียว */
+.late{background:#fecaca;}
+.early{background:#bbf7d0;}
+
+.summary{
+font-size:18px;
+font-weight:bold;
+margin:10px 0;
+}
 
 </style>
 </head>
@@ -41,7 +47,15 @@ text-align:center;
 
 <input type="month" id="monthSelect">
 
+จากวันที่:
+<input type="date" id="startDate">
+
+ถึงวันที่:
+<input type="date" id="endDate">
+
 <br><br>
+
+<div id="summary" class="summary"></div>
 
 <table>
 <thead>
@@ -74,7 +88,11 @@ const WORK_TIME = "08:00:00";
 
 const userSelect = document.getElementById("userSelect");
 const monthSelect = document.getElementById("monthSelect");
+const startDate = document.getElementById("startDate");
+const endDate = document.getElementById("endDate");
+
 const body = document.getElementById("reportBody");
+const summary = document.getElementById("summary");
 
 let employees = {};
 let checkins = {};
@@ -83,16 +101,12 @@ let checkins = {};
 // โหลด user
 onValue(ref(db,"employees"),snap=>{
  employees = snap.val() || {};
-
  userSelect.innerHTML="";
-
  Object.values(employees).forEach(u=>{
   userSelect.innerHTML+=`<option>${u.fullname}</option>`;
  });
-
  render();
 });
-
 
 // โหลด checkin
 onValue(ref(db,"checkins"),snap=>{
@@ -100,21 +114,21 @@ onValue(ref(db,"checkins"),snap=>{
  render();
 });
 
-
 userSelect.onchange = render;
 monthSelect.onchange = render;
+startDate.onchange = render;
+endDate.onchange = render;
 
 
 function timeToMinutes(t){
-
  const [h,m,s]=t.split(":").map(Number);
  return h*60+m;
 }
 
-
 function render(){
 
  body.innerHTML="";
+ summary.innerHTML="";
 
  const selectedUser = userSelect.value;
  const selectedMonth = monthSelect.value;
@@ -123,6 +137,8 @@ function render(){
 
  const workMin = timeToMinutes(WORK_TIME);
 
+ let totalDiff = 0;
+
  Object.values(checkins).forEach(c=>{
 
   if(c.employee !== selectedUser) return;
@@ -130,21 +146,31 @@ function render(){
   const date = new Date(c.timestamp);
 
   const ym = date.toISOString().slice(0,7);
-
   if(ym !== selectedMonth) return;
+
+  // filter ช่วงวันที่
+  if(startDate.value){
+    if(date < new Date(startDate.value)) return;
+  }
+
+  if(endDate.value){
+    if(date > new Date(endDate.value+"T23:59:59")) return;
+  }
 
   const checkMin = timeToMinutes(c.time);
 
   const diff = checkMin - workMin;
 
-  const status = diff>0 ? "มาสาย" : "มาเร็ว";
+  totalDiff += diff;
+
+  const status = diff>0 ? "มาสาย":"มาเร็ว";
 
   const tr = document.createElement("tr");
 
   tr.className = diff>0 ? "late":"early";
 
   tr.innerHTML=`
-  <td>${date.toLocaleDateString()}</td>
+  <td>${date.toLocaleDateString("th-TH")}</td>
   <td>${c.employee}</td>
   <td>${c.time}</td>
   <td>${status}</td>
@@ -154,6 +180,17 @@ function render(){
   body.appendChild(tr);
 
  });
+
+ // ⭐ สรุปผลรวม
+ if(totalDiff < 0){
+   summary.innerHTML = "✅ รวมมาเร็วก่อนเวลา "+Math.abs(totalDiff)+" นาที";
+   summary.style.color="green";
+ }else if(totalDiff > 0){
+   summary.innerHTML = "⚠️ รวมมาสาย "+totalDiff+" นาที";
+   summary.style.color="red";
+ }else{
+   summary.innerHTML = "ตรงเวลา";
+ }
 
 }
 
