@@ -1,97 +1,61 @@
 <?php
 session_start();
+
+$error = null;
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+
+    $username = $_POST["username"] ?? '';
+    $password = $_POST["password"] ?? '';
+
+    // ⭐ hash password (เหมือน admin page)
+    $hash = hash("sha256", $password);
+
+    // ⭐ ดึง firebase
+    $url = "https://checkin-system-5b6a4-default-rtdb.asia-southeast1.firebasedatabase.app/employees.json";
+
+    $json = file_get_contents($url);
+
+    $employees = json_decode($json, true);
+
+    if ($employees) {
+
+        foreach ($employees as $key => $emp) {
+
+            if (
+                $emp["username"] === $username &&
+                $emp["password"] === $hash
+            ) {
+
+                // login success
+                $_SESSION["employee_id"] = $key;
+                $_SESSION["fullname"] = $emp["fullname"];
+                $_SESSION["role"] = $emp["role"];
+
+                header("Location: index.php");
+                exit;
+            }
+        }
+    }
+
+    $error = "Login ไม่ถูกต้อง";
+}
 ?>
 <!DOCTYPE html>
-<html lang="th">
-<head>
-<meta charset="utf-8">
-<title>เข้าสู่ระบบ</title>
-</head>
-
+<html>
 <body>
 
 <h2>เข้าสู่ระบบ</h2>
 
-<input id="username" placeholder="Username"><br><br>
-<input id="password" type="password" placeholder="Password"><br><br>
+<?php if($error): ?>
+<p style="color:red"><?= $error ?></p>
+<?php endif; ?>
 
-<button onclick="login()">เข้าสู่ระบบ</button>
-
-<p id="msg" style="color:red"></p>
-
-
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-const firebaseConfig = {
-apiKey:"AIzaSyBr6DpIWx4lws1fHvTSoePy5fcthnybZD8",
-authDomain:"checkin-system-5b6a4.firebaseapp.com",
-databaseURL:"https://checkin-system-5b6a4-default-rtdb.asia-southeast1.firebasedatabase.app",
-projectId:"checkin-system-5b6a4",
-storageBucket:"checkin-system-5b6a4.firebasestorage.app",
-messagingSenderId:"45265472142",
-appId:"1:45265472142:web:bc0e732b3968efa42dd7df"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-async function sha256(str){
-
- const buf = await crypto.subtle.digest(
-  "SHA-256",
-  new TextEncoder().encode(str)
- );
-
- return Array.from(new Uint8Array(buf))
-  .map(b=>b.toString(16).padStart(2,"0"))
-  .join("");
-}
-
-
-window.login = async function(){
-
-const username=document.getElementById("username").value;
-const password=document.getElementById("password").value;
-const hash=await sha256(password);
-
-const snap = await get(ref(db,"employees"));
-
-if(!snap.exists()){
- document.getElementById("msg").innerText="ไม่มี user";
- return;
-}
-
-let found=null;
-
-snap.forEach(child=>{
-
- const u=child.val();
-
- if(u.username===username && u.password===hash){
-   found={...u,id:child.key};
- }
-
-});
-
-if(!found){
- document.getElementById("msg").innerText="Login ไม่ถูกต้อง";
- return;
-}
-
-// ส่ง session ไป PHP
-fetch("set_session.php",{
- method:"POST",
- headers:{ "Content-Type":"application/json"},
- body:JSON.stringify(found)
-})
-.then(()=>location.href="index.php");
-
-};
-
-</script>
+<form method="post">
+<input name="username" placeholder="Username">
+<input type="password" name="password" placeholder="Password">
+<button>เข้าสู่ระบบ</button>
+</form>
 
 </body>
 </html>
