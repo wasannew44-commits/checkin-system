@@ -22,10 +22,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         foreach ($employees as $key => $emp) {
 
-            if (
-                $emp["username"] === $username &&
-                $emp["password"] === $hash
-            ) {
+    // กัน error field ไม่มี
+    if (!isset($emp["username"]) || !isset($emp["password"])) {
+        continue;
+    }
+
+    if (
+        $emp["username"] === $username &&
+        $emp["password"] === $hash
+    ) {
 
                 // login success
                 $_SESSION["employee_id"] = $key;
@@ -59,3 +64,4 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 </body>
 </html>
+
