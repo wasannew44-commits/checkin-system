@@ -6,7 +6,6 @@ if (!isset($_SESSION["employee_id"])) {
   exit;
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -52,6 +51,11 @@ background:#f9fafb;
 
 </div>
 
+<!-- ⭐ ส่งชื่อ user จาก PHP -> JS -->
+<script>
+const myName = <?= json_encode($_SESSION["fullname"]) ?>;
+</script>
+
 
 <script type="module">
 
@@ -87,7 +91,12 @@ return;
 
 let html="";
 
-Object.values(data).reverse().forEach(item=>{
+Object.values(data)
+.reverse()
+.forEach(item=>{
+
+// ⭐ สำคัญมาก (ล็อคให้เห็นเฉพาะตัวเอง)
+if(item.employee !== myName) return;
 
 html += `
 <div class="card">
@@ -99,7 +108,11 @@ html += `
 
 });
 
-list.innerHTML=html;
+if(html===""){
+ list.innerHTML="ยังไม่มีประวัติของคุณ";
+}else{
+ list.innerHTML=html;
+}
 
 });
 
