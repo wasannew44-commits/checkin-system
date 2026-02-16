@@ -17,21 +17,22 @@ session_start();
 
 <button onclick="login()">เข้าสู่ระบบ</button>
 
-<p id="error" style="color:red"></p>
+<p id="msg" style="color:red"></p>
+
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, get, child, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const firebaseConfig = {
- apiKey:"AIzaSyBr6DpIWx4lws1fHvTSoePy5fcthnybZD8",
- authDomain:"checkin-system-5b6a4.firebaseapp.com",
- databaseURL:"https://checkin-system-5b6a4-default-rtdb.asia-southeast1.firebasedatabase.app",
- projectId:"checkin-system-5b6a4",
- storageBucket:"checkin-system-5b6a4.firebasestorage.app",
- messagingSenderId:"45265472142",
- appId:"1:45265472142:web:bc0e732b3968efa42dd7df"
+apiKey:"AIzaSyBr6DpIWx4lws1fHvTSoePy5fcthnybZD8",
+authDomain:"checkin-system-5b6a4.firebaseapp.com",
+databaseURL:"https://checkin-system-5b6a4-default-rtdb.asia-southeast1.firebasedatabase.app",
+projectId:"checkin-system-5b6a4",
+storageBucket:"checkin-system-5b6a4.firebasestorage.app",
+messagingSenderId:"45265472142",
+appId:"1:45265472142:web:bc0e732b3968efa42dd7df"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -49,73 +50,46 @@ async function sha256(str){
   .join("");
 }
 
-function getDeviceId(){
-
- return btoa(
-   navigator.userAgent +
-   screen.width +
-   screen.height
- );
-}
 
 window.login = async function(){
 
- const username=document.getElementById("username").value;
- const password=document.getElementById("password").value;
- const error=document.getElementById("error");
+const username=document.getElementById("username").value;
+const password=document.getElementById("password").value;
+const hash=await sha256(password);
 
- const hash = await sha256(password);
+const snap = await get(ref(db,"employees"));
 
- const snapshot = await get(ref(db,"employees"));
-
- if(!snapshot.exists()){
-   error.innerText="ไม่มีข้อมูล";
-   return;
- }
-
- const data=snapshot.val();
-
- for(const key in data){
-
-   const user=data[key];
-
-   if(user.username===username && user.password===hash){
-
-      const device=getDeviceId();
-
-      // ⭐ lock device
-      if(user.device_id && user.device_id!==device){
-
-        error.innerText="บัญชีถูกล็อคกับเครื่องอื่น";
-        return;
-      }
-
-      if(!user.device_id){
-
-        await update(ref(db,"employees/"+key),{
-          device_id:device
-        });
-      }
-
-      // ส่ง session ไป PHP
-      fetch("set_session.php",{
-        method:"POST",
-        headers:{ "Content-Type":"application/x-www-form-urlencoded" },
-        body:
-        "fullname="+encodeURIComponent(user.fullname)+
-        "&role="+user.role+
-        "&id="+key
-      }).then(()=>{
-        location="index.php";
-      });
-
-      return;
-   }
- }
-
- error.innerText="Login ไม่ถูกต้อง";
-
+if(!snap.exists()){
+ document.getElementById("msg").innerText="ไม่มี user";
+ return;
 }
+
+let found=null;
+
+snap.forEach(child=>{
+
+ const u=child.val();
+
+ if(u.username===username && u.password===hash){
+   found={...u,id:child.key};
+ }
+
+});
+
+if(!found){
+ document.getElementById("msg").innerText="Login ไม่ถูกต้อง";
+ return;
+}
+
+// ส่ง session ไป PHP
+fetch("set_session.php",{
+ method:"POST",
+ headers:{ "Content-Type":"application/json"},
+ body:JSON.stringify(found)
+})
+.then(()=>location.href="index.php");
+
+};
 
 </script>
 
