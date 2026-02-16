@@ -1,6 +1,8 @@
+<!-- ส่งชื่อพนักงานจาก PHP -> JS -->
 <script>
 const employeeName = <?= json_encode($_SESSION["fullname"]) ?>;
 </script>
+
 
 <script type="module">
 
@@ -26,14 +28,16 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-window.checkIn = function () {
+
+/* ⭐ สำคัญ ต้องประกาศ global */
+window.checkIn = function() {
 
   const status = document.getElementById("status");
   status.innerText = "📍 กำลังตรวจสอบตำแหน่ง...";
 
   navigator.geolocation.getCurrentPosition(
 
-    pos => {
+    (pos) => {
 
       const { latitude, longitude, accuracy } = pos.coords;
 
@@ -62,11 +66,11 @@ window.checkIn = function () {
 
       push(checkinRef,{
         employee: employeeName,
-        time:time,
-        timestamp:Date.now(),
-        lat:latitude,
-        lng:longitude,
-        distance:distance
+        time: time,
+        timestamp: Date.now(),
+        lat: latitude,
+        lng: longitude,
+        distance: distance
       });
 
       const late =
@@ -81,8 +85,10 @@ window.checkIn = function () {
     },
 
     () => status.innerText = "❌ ไม่สามารถดึง GPS ได้"
+
   );
 }
+
 
 function getDistance(lat1, lon1, lat2, lon2) {
 
