@@ -15,7 +15,6 @@ if (!isset($_SESSION["employee_id"])) {
 <title>ระบบเช็คเวลาเข้างาน</title>
 
 <style>
-
 body{
 font-family:system-ui;
 background:#f3f4f6;
@@ -39,6 +38,8 @@ border:none;
 border-radius:8px;
 color:#fff;
 cursor:pointer;
+text-decoration:none;
+text-align:center;
 }
 
 .blue{background:#2563eb;}
@@ -54,7 +55,6 @@ border-radius:8px;
 text-align:center;
 white-space:pre-line;
 }
-
 </style>
 </head>
 
@@ -81,7 +81,7 @@ white-space:pre-line;
 </div>
 
 
-<!-- ส่งชื่อ PHP ไป JS -->
+<!-- ส่งชื่อ PHP -> JS -->
 <script>
 const employeeName = <?= json_encode($_SESSION["fullname"] ?? "") ?>;
 </script>
@@ -113,7 +113,9 @@ const maxAccuracy = 100;
 const workStartTime = "08:00:00";
 
 
-window.checkIn=function(){
+function checkIn(){
+
+console.log("🔥 checkIn triggered"); // debug
 
 const status=document.getElementById("status");
 
@@ -171,7 +173,10 @@ late;
 
 );
 
-};
+}
+
+// ⭐ สำคัญ (ทำให้ onclick ใช้ได้)
+window.checkIn = checkIn;
 
 
 function getDistance(lat1,lon1,lat2,lon2){
