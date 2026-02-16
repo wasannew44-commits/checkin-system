@@ -1,28 +1,24 @@
 <?php
+date_default_timezone_set('Asia/Bangkok');
 
-mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-
-$host = "maglev.proxy.rlwy.net"; // ใส่ host จริงจาก Railway/Render
-$user = "root";
-$pass = "railway";
-$db   = "railway";
-$port = 30701;
+$host = getenv('DB_HOST');
+$user = getenv('DB_USER');
+$pass = getenv('DB_PASSWORD');
+$db   = getenv('DB_NAME');
+$port = getenv('DB_PORT');
 
 $conn = mysqli_init();
 
-mysqli_ssl_set($conn, NULL, NULL, NULL, NULL, NULL);
-
+/* ⭐ ไม่ต้อง SSL */
 mysqli_real_connect(
     $conn,
     $host,
     $user,
     $pass,
     $db,
-    $port,
-    NULL,
-    MYSQLI_CLIENT_SSL
+    (int)$port
 );
 
-$conn->set_charset("utf8mb4");
-
-?>
+if (mysqli_connect_errno()) {
+    die("DB connect failed: " . mysqli_connect_error());
+}
