@@ -91,37 +91,60 @@ const db = getDatabase(app);
 
 const employeeRef = ref(db,"employees");
 
-window.addEmployee=function(){
 
-const fullname=document.getElementById("fullname").value;
-const username=document.getElementById("username").value;
-const password=document.getElementById("password").value;
-const role=document.getElementById("role").value;
+// ⭐ hash password
+async function sha256(str){
 
-push(employeeRef,{
-fullname,
-username,
-password,
-role
-});
+ const buf = await crypto.subtle.digest(
+  "SHA-256",
+  new TextEncoder().encode(str)
+ );
 
-alert("เพิ่มแล้ว");
+ return Array.from(new Uint8Array(buf))
+  .map(b=>b.toString(16).padStart(2,"0"))
+  .join("");
+}
+
+
+// ⭐ เพิ่มพนักงาน
+window.addEmployee = async function(){
+
+ const fullname=document.getElementById("fullname").value.trim();
+ const username=document.getElementById("username").value.trim();
+ const password=document.getElementById("password").value;
+ const role=document.getElementById("role").value;
+
+ if(!fullname || !username || !password){
+   alert("กรอกข้อมูลให้ครบ");
+   return;
+ }
+
+ push(employeeRef,{
+   fullname,
+   username,
+   password: await sha256(password),
+   role,
+   device_id:""
+ });
+
+ alert("เพิ่มพนักงานแล้ว");
 
 };
 
+
+// ⭐ โหลดรายชื่อ
 const list=document.getElementById("employeeList");
 
 onValue(employeeRef,(snapshot)=>{
 
-list.innerHTML="";
+ list.innerHTML="";
 
-const data=snapshot.val();
+ const data=snapshot.val();
+ if(!data) return;
 
-if(!data) return;
+ Object.entries(data).forEach(([key,row])=>{
 
-Object.entries(data).forEach(([key,row])=>{
-
-list.innerHTML+=`
+ list.innerHTML+=`
 <tr>
 <td>${key}</td>
 <td>${row.fullname}</td>
@@ -133,15 +156,17 @@ list.innerHTML+=`
 </tr>
 `;
 
-});
+ });
 
 });
 
+
+// ⭐ ลบ
 window.deleteEmployee=function(id){
 
-if(!confirm("ลบพนักงาน?")) return;
+ if(!confirm("ลบพนักงาน?")) return;
 
-remove(ref(db,"employees/"+id));
+ remove(ref(db,"employees/"+id));
 
 };
 
@@ -149,3 +174,4 @@ remove(ref(db,"employees/"+id));
 
 </body>
 </html>
+
