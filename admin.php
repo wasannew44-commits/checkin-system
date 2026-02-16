@@ -34,6 +34,7 @@ a { text-decoration:none; }
 <p>ผู้ดูแลระบบ: <b><?= htmlspecialchars($_SESSION["fullname"]) ?></b></p>
 
 <a href="index.php">← กลับหน้าเช็คอิน</a>
+  | <a href="admin_report.php">📊 ดูรายงานเวลาเข้างาน</a>
 
 <hr>
 
@@ -174,4 +175,5 @@ window.deleteEmployee=function(id){
 
 </body>
 </html>
+
 
