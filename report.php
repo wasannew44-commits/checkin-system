@@ -1,133 +1,109 @@
 <?php
 session_start();
+
 if (!isset($_SESSION["employee_id"])) {
   header("Location: login.php");
   exit;
 }
-
-include "db.php";
-
-$employee_id = $_SESSION["employee_id"];
-$fullname = $_SESSION["fullname"];
-
-// เดือน / ปี (ค่าเริ่มต้น = ปัจจุบัน)
-$month = $_GET["month"] ?? date("m");
-$year  = $_GET["year"]  ?? date("Y");
-
-require_once "db.php";
-$stmt = $conn->prepare("
-  SELECT checkin_date, checkin_time, distance
-  FROM checkins
-  WHERE employee_id = ?
-    AND MONTH(checkin_date) = ?
-    AND YEAR(checkin_date) = ?
-  ORDER BY checkin_date DESC
-");
-$stmt->bind_param("iii", $employee_id, $month, $year);
-$stmt->execute();
-$result = $stmt->get_result();
 ?>
+
 <!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ประวัติการเข้างาน</title>
+<title>ประวัติการเช็คอิน</title>
 
 <style>
-body {
-  font-family: system-ui, -apple-system, sans-serif;
-  padding: 20px;
-}
-h2 { margin-bottom: 5px; }
-.form-box {
-  margin-top: 10px;
-}
-select, button {
-  padding: 8px 12px;
-  font-size: 15px;
-}
-button {
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-}
-.btn-view { background: #2563eb; color: #fff; }
-.btn-excel { background: #16a34a; color: #fff; }
-.btn-back { color: #2563eb; text-decoration: none; }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 15px;
+body{
+font-family:system-ui;
+background:#f3f4f6;
+padding:20px;
 }
-th, td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
+
+.container{
+max-width:600px;
+margin:auto;
+background:#fff;
+padding:20px;
+border-radius:12px;
 }
-th {
-  background: #f3f4f6;
+
+.card{
+padding:12px;
+margin-top:10px;
+border-radius:8px;
+background:#f9fafb;
 }
+
 </style>
 </head>
+
 <body>
 
-<h2>ประวัติการเข้างาน</h2>
-<p>ผู้ใช้งาน: <b><?= htmlspecialchars($fullname) ?></b></p>
+<div class="container">
 
-<form method="get" class="form-box">
-  เดือน:
-  <select name="month">
-    <?php for ($m=1;$m<=12;$m++): ?>
-      <option value="<?= $m ?>" <?= ($m==$month?'selected':'') ?>>
-        <?= $m ?>
-      </option>
-    <?php endfor; ?>
-  </select>
+<h2>📄 ประวัติการเช็คอิน</h2>
 
-  ปี:
-  <select name="year">
-    <?php for ($y=date("Y");$y>=date("Y")-5;$y--): ?>
-      <option value="<?= $y ?>" <?= ($y==$year?'selected':'') ?>>
-        <?= $y ?>
-      </option>
-    <?php endfor; ?>
-  </select>
+<div id="list">กำลังโหลด...</div>
 
-  <button type="submit" class="btn-view">ดูข้อมูล</button>
+<a href="index.php">⬅ กลับหน้าเช็คอิน</a>
 
-  <!-- ✅ Export Excel -->
-  <a href="export_excel.php?month=<?= $month ?>&year=<?= $year ?>">
-    <button type="button" class="btn-excel">📥 Export Excel</button>
-  </a>
-</form>
+</div>
 
-<table>
-  <tr>
-    <th>วันที่</th>
-    <th>เวลา</th>
-    <th>ระยะ (เมตร)</th>
-  </tr>
 
-  <?php if ($result->num_rows === 0): ?>
-    <tr>
-      <td colspan="3">ไม่มีข้อมูล</td>
-    </tr>
-  <?php else: ?>
-    <?php while ($row = $result->fetch_assoc()): ?>
-      <tr>
-        <td><?= $row["checkin_date"] ?></td>
-        <td><?= $row["checkin_time"] ?></td>
-        <td><?= number_format($row["distance"], 1) ?></td>
-      </tr>
-    <?php endwhile; ?>
-  <?php endif; ?>
-</table>
+<script type="module">
 
-<br>
-<a href="index.php" class="btn-back">← กลับหน้าเช็คอิน</a>
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+
+const firebaseConfig = {
+apiKey:"AIzaSyBr6DpIWx4lws1fHvTSoePy5fcthnybZD8",
+authDomain:"checkin-system-5b6a4.firebaseapp.com",
+databaseURL:"https://checkin-system-5b6a4-default-rtdb.asia-southeast1.firebasedatabase.app",
+projectId:"checkin-system-5b6a4",
+storageBucket:"checkin-system-5b6a4.firebasestorage.app",
+messagingSenderId:"45265472142",
+appId:"1:45265472142:web:bc0e732b3968efa42dd7df"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const list = document.getElementById("list");
+
+const checkinsRef = ref(db,"checkins");
+
+onValue(checkinsRef,(snapshot)=>{
+
+const data = snapshot.val();
+
+if(!data){
+list.innerHTML="ยังไม่มีข้อมูล";
+return;
+}
+
+let html="";
+
+Object.values(data).reverse().forEach(item=>{
+
+html += `
+<div class="card">
+👤 ${item.employee}<br>
+⏰ ${item.time}<br>
+📍 ระยะ ${Number(item.distance).toFixed(1)} m
+</div>
+`;
+
+});
+
+list.innerHTML=html;
+
+});
+
+</script>
 
 </body>
 </html>
-
