@@ -1,26 +1,43 @@
 <?php
 session_start();
 
-$error = null;
+$error=null;
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
+if($_SERVER["REQUEST_METHOD"]==="POST"){
 
-    $username = $_POST["username"] ?? '';
-    $password = $_POST["password"] ?? '';
+$username=$_POST["username"]??"";
+$password=$_POST["password"]??"";
 
-    // ตัวอย่าง login admin
-    if ($username === "admin" && $password === "1234") {
+$data=json_decode(file_get_contents(
+"https://checkin-system-5b6a4-default-rtdb.asia-southeast1.firebasedatabase.app/employees.json"
+),true);
 
-        $_SESSION["employee_id"] = 1;
-        $_SESSION["fullname"] = "ผู้ดูแลระบบ";
-        $_SESSION["role"] = "admin";
+if($data){
 
-        header("Location: index.php");
-        exit;
+$hash=hash("sha256",$password);
 
-    } else {
-        $error = "Login ไม่ถูกต้อง";
-    }
+foreach($data as $key=>$user){
+
+if(
+$user["username"]===$username &&
+$user["password"]===$hash
+){
+
+$_SESSION["employee_id"]=$key;
+$_SESSION["fullname"]=$user["fullname"];
+$_SESSION["role"]=$user["role"];
+
+header("Location:index.php");
+exit;
+
+}
+
+}
+
+}
+
+$error="Login ไม่ถูกต้อง";
+
 }
 ?>
 
@@ -122,3 +139,4 @@ margin-top:10px;
 
 </body>
 </html>
+
