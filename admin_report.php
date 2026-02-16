@@ -1,114 +1,163 @@
 <?php
 session_start();
-if (!isset($_SESSION["employee_id"]) || $_SESSION["role"] !== "admin") {
-  header("Location: index.php");
-  exit;
-}
 
-include "db.php";
-
-/* ===== ค่าเริ่มต้น ===== */
-$month = $_GET["month"] ?? date("m");
-$year  = $_GET["year"] ?? date("Y");
-$employee_id = $_GET["employee_id"] ?? "";
-
-/* ===== ดึงรายชื่อพนักงาน ===== */
-$emp_list = $conn->query("
-  SELECT id, fullname
-  FROM employees
-  ORDER BY fullname
-");
-
-/* ===== ดึงข้อมูลเช็คอิน ===== */
-$rows = [];
-if ($employee_id) {
-  $stmt = $conn->prepare("
-    SELECT c.checkin_date, c.checkin_time, e.fullname
-    FROM checkins c
-    JOIN employees e ON c.employee_id = e.id
-    WHERE c.employee_id = ?
-      AND MONTH(c.checkin_date) = ?
-      AND YEAR(c.checkin_date) = ?
-    ORDER BY c.checkin_date
-  ");
-  $stmt->bind_param("iii", $employee_id, $month, $year);
-  $stmt->execute();
-  $rows = $stmt->get_result();
+if(!isset($_SESSION["employee_id"]) || $_SESSION["role"]!=="admin"){
+ header("Location:index.php");
+ exit;
 }
 ?>
 <!DOCTYPE html>
-<html lang="th">
+<html>
 <head>
 <meta charset="utf-8">
-<title>รายงานการเข้างาน (Admin)</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>รายงานเข้างาน</title>
+
 <style>
-body { font-family: system-ui; padding:20px; }
-select, button { padding:6px; }
-table { width:100%; border-collapse:collapse; margin-top:15px; }
-th,td { border:1px solid #ddd; padding:8px; text-align:center; }
-th { background:#f3f4f6; }
-.late { color:#dc2626; font-weight:bold; }
+
+body{font-family:system-ui;padding:20px;background:#f3f4f6;}
+
+table{
+width:100%;
+background:white;
+border-collapse:collapse;
+}
+
+th,td{
+padding:10px;
+border:1px solid #ddd;
+text-align:center;
+}
+
+.late{background:#fecaca;}     /* แดง */
+.early{background:#bbf7d0;}    /* เขียว */
+
 </style>
 </head>
 <body>
 
-<h2>📊 รายงานการเข้างาน (Admin)</h2>
-<a href="admin.php">← กลับหน้า Admin</a>
+<h2>📊 รายงานเวลาเข้างาน</h2>
 
-<form method="get" style="margin-top:15px;">
-  พนักงาน:
-  <select name="employee_id" required>
-    <option value="">-- เลือกพนักงาน --</option>
-    <?php while ($e = $emp_list->fetch_assoc()): ?>
-      <option value="<?= $e['id'] ?>" <?= $employee_id==$e['id']?'selected':'' ?>>
-        <?= htmlspecialchars($e['fullname']) ?>
-      </option>
-    <?php endwhile; ?>
-  </select>
+<select id="userSelect"></select>
 
-  เดือน:
-  <select name="month">
-    <?php for($m=1;$m<=12;$m++): ?>
-      <option value="<?= $m ?>" <?= $m==$month?'selected':'' ?>><?= $m ?></option>
-    <?php endfor; ?>
-  </select>
+<input type="month" id="monthSelect">
 
-  ปี:
-  <select name="year">
-    <?php for($y=date("Y");$y>=date("Y")-5;$y--): ?>
-      <option value="<?= $y ?>" <?= $y==$year?'selected':'' ?>><?= $y ?></option>
-    <?php endfor; ?>
-  </select>
+<br><br>
 
-  <button type="submit">ดูรายงาน</button>
-</form>
-
-<?php if ($employee_id): ?>
 <table>
+<thead>
 <tr>
-  <th>วันที่</th>
-  <th>เวลาเข้างาน</th>
-  <th>สถานะ</th>
+<th>วันที่</th>
+<th>ชื่อ</th>
+<th>เวลา</th>
+<th>สถานะ</th>
+<th>ต่างจากเวลา (นาที)</th>
 </tr>
-
-<?php if ($rows->num_rows == 0): ?>
-<tr><td colspan="3">ไม่มีข้อมูล</td></tr>
-<?php else: ?>
-<?php while ($r = $rows->fetch_assoc()): 
-  $late = ($r["checkin_time"] > "08:00:00"); // ⏰ ปรับเวลาได้
-?>
-<tr>
-  <td><?= $r["checkin_date"] ?></td>
-  <td><?= $r["checkin_time"] ?></td>
-  <td class="<?= $late?'late':'' ?>">
-    <?= $late ? "⏰มาสาย" : "✅ปกติ" ?>
-  </td>
-</tr>
-<?php endwhile; ?>
-<?php endif; ?>
+</thead>
+<tbody id="reportBody"></tbody>
 </table>
-<?php endif; ?>
+
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+apiKey:"AIza...",
+databaseURL:"https://checkin-system-5b6a4-default-rtdb.asia-southeast1.firebasedatabase.app"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const WORK_TIME = "08:00:00";
+
+const userSelect = document.getElementById("userSelect");
+const monthSelect = document.getElementById("monthSelect");
+const body = document.getElementById("reportBody");
+
+let employees = {};
+let checkins = {};
+
+
+// โหลด user
+onValue(ref(db,"employees"),snap=>{
+ employees = snap.val() || {};
+
+ userSelect.innerHTML="";
+
+ Object.values(employees).forEach(u=>{
+  userSelect.innerHTML+=`<option>${u.fullname}</option>`;
+ });
+
+ render();
+});
+
+
+// โหลด checkin
+onValue(ref(db,"checkins"),snap=>{
+ checkins = snap.val() || {};
+ render();
+});
+
+
+userSelect.onchange = render;
+monthSelect.onchange = render;
+
+
+function timeToMinutes(t){
+
+ const [h,m,s]=t.split(":").map(Number);
+ return h*60+m;
+}
+
+
+function render(){
+
+ body.innerHTML="";
+
+ const selectedUser = userSelect.value;
+ const selectedMonth = monthSelect.value;
+
+ if(!selectedUser || !selectedMonth) return;
+
+ const workMin = timeToMinutes(WORK_TIME);
+
+ Object.values(checkins).forEach(c=>{
+
+  if(c.employee !== selectedUser) return;
+
+  const date = new Date(c.timestamp);
+
+  const ym = date.toISOString().slice(0,7);
+
+  if(ym !== selectedMonth) return;
+
+  const checkMin = timeToMinutes(c.time);
+
+  const diff = checkMin - workMin;
+
+  const status = diff>0 ? "มาสาย" : "มาเร็ว";
+
+  const tr = document.createElement("tr");
+
+  tr.className = diff>0 ? "late":"early";
+
+  tr.innerHTML=`
+  <td>${date.toLocaleDateString()}</td>
+  <td>${c.employee}</td>
+  <td>${c.time}</td>
+  <td>${status}</td>
+  <td>${Math.abs(diff)}</td>
+  `;
+
+  body.appendChild(tr);
+
+ });
+
+}
+
+</script>
 
 </body>
 </html>
