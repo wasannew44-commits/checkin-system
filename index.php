@@ -90,8 +90,7 @@ const employeeName = <?= json_encode($_SESSION["fullname"] ?? "") ?>;
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
+import { getDatabase, ref, push, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const firebaseConfig = {
 apiKey:"AIzaSyBr6DpIWx4lws1fHvTSoePy5fcthnybZD8",
@@ -112,18 +111,13 @@ const allowedRadius = 150;
 const maxAccuracy = 100;
 const workStartTime = "08:00:00";
 
-
-function checkIn(){
-
-console.log("🔥 checkIn triggered"); // debug
+async function checkIn(){
 
 const status=document.getElementById("status");
 
 status.innerText="📍 กำลังตรวจสอบตำแหน่ง...";
 
-navigator.geolocation.getCurrentPosition(
-
-(pos)=>{
+navigator.geolocation.getCurrentPosition(async (pos)=>{
 
 const {latitude,longitude,accuracy}=pos.coords;
 
@@ -139,6 +133,35 @@ status.innerText=`❌ อยู่นอกพื้นที่ (${distance.toF
 return;
 }
 
+// ⭐ ตรวจว่ามีเช็คอินวันนี้แล้วหรือยัง
+const snapshot = await get(ref(db,"checkins"));
+const data = snapshot.val();
+
+const today = new Date().toISOString().slice(0,10);
+
+if(data){
+
+const already = Object.values(data).some(c=>{
+
+if(c.employee !== employeeName) return false;
+
+const d = new Date(c.timestamp).toISOString().slice(0,10);
+
+return d === today;
+
+});
+
+if(already){
+status.innerText="❌ วันนี้คุณเช็คอินแล้ว";
+return;
+}
+
+}
+
+// ===== ผ่านแล้ว =====
+
+status.innerText="💾 กำลังบันทึกข้อมูล...";
+
 const now=new Date();
 
 const time=
@@ -146,9 +169,7 @@ now.getHours().toString().padStart(2,"0")+":"+
 now.getMinutes().toString().padStart(2,"0")+":"+
 now.getSeconds().toString().padStart(2,"0");
 
-const checkinRef=ref(db,"checkins");
-
-push(checkinRef,{
+push(ref(db,"checkins"),{
 employee:employeeName,
 time:time,
 timestamp:Date.now(),
@@ -168,14 +189,11 @@ status.innerText=
 late;
 
 },
-
 ()=>status.innerText="❌ ไม่สามารถดึง GPS ได้"
-
 );
 
 }
 
-// ⭐ สำคัญ (ทำให้ onclick ใช้ได้)
 window.checkIn = checkIn;
 
 
@@ -198,5 +216,7 @@ return R*(2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)));
 
 </script>
 
+
 </body>
 </html>
+
