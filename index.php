@@ -107,7 +107,7 @@ const db = getDatabase(app);
 
 const officeLat = 16.32803442485856;
 const officeLng = 103.30575654156942;
-const allowedRadius = 150;
+const allowedRadius = 100;
 const maxAccuracy = 100;
 const workStartTime = "08:00:00";
 
