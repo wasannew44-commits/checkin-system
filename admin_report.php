@@ -431,6 +431,7 @@ function calculateSalary(empId, workDateList){
   const workDays = workDateList.length;
   const offDays = Math.max(0, totalDaysInRange - workDays);
 
+  // พาร์ทไทม์ = จำนวนวันที่มาทำงาน x ค่าแรงรายวัน
   if(emp.employee_type === "parttime"){
     const daily = Number(emp.daily_wage || 0);
     return {
@@ -440,6 +441,32 @@ function calculateSalary(empId, workDateList){
       weeksAllowed: 0
     };
   }
+
+  // พนักงานประจำ = คิดเฉพาะช่วงวันที่เลือก
+  const monthlySalary = Number(emp.salary || 0);
+  const perDay = monthlySalary / 30;
+
+  // เงินพื้นฐานเฉพาะช่วงวันที่เลือก
+  const baseSalaryInRange = perDay * totalDaysInRange;
+
+  // หยุดได้ 1 วัน / สัปดาห์ ตามช่วงวันที่เลือก
+  const allowedOffDays = Math.floor(totalDaysInRange / 7);
+
+  // ถ้าช่วงสั้นกว่า 7 วัน ให้หยุดฟรี 0 วัน
+  const deductibleOffDays = Math.max(0, offDays - allowedOffDays);
+
+  // หักเฉพาะวันที่เกินสิทธิ
+  const deduction = deductibleOffDays * perDay;
+
+  const salaryPay = Math.max(0, baseSalaryInRange - deduction);
+
+  return {
+    salaryPay,
+    offDays,
+    deductibleOffDays,
+    weeksAllowed: allowedOffDays
+  };
+}
 
   const monthlySalary = Number(emp.salary || 0);
   const perDay = monthlySalary / 30;
