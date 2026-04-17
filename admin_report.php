@@ -450,7 +450,7 @@ function calculateSalary(empId, workDateList){
   const baseSalaryInRange = perDay * totalDaysInRange;
 
   // หยุดได้ 1 วัน / สัปดาห์ ตามช่วงวันที่เลือก
-  const allowedOffDays = Math.floor(totalDaysInRange / 7);
+  const allowedOffDays = Math.ceil(totalDaysInRange / 7);
 
   // ถ้าช่วงสั้นกว่า 7 วัน ให้หยุดฟรี 0 วัน
   const deductibleOffDays = Math.max(0, offDays - allowedOffDays);
