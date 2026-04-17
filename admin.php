@@ -23,7 +23,6 @@ button { padding:6px 12px; border:none; border-radius:5px; cursor:pointer; }
 .btn-add { background:#16a34a; color:#fff; }
 .btn-del { background:#dc2626; color:#fff; }
 .btn-edit { background:#2563eb; color:#fff; }
-.warn { color:#dc2626; font-size:13px; }
 a { text-decoration:none; }
 </style>
 
@@ -33,8 +32,8 @@ a { text-decoration:none; }
 <h2>👑 Admin : จัดการพนักงาน</h2>
 <p>ผู้ดูแลระบบ: <b><?= htmlspecialchars($_SESSION["fullname"]) ?></b></p>
 
-<a href="index.php">← กลับหน้าเช็คอิน</a>
-  | <a href="admin_report.php">📊 ดูรายงานเวลาเข้างาน</a>
+<a href="index.php">← กลับหน้าเช็คอิน</a> |
+<a href="admin_report.php">📊 ดูรายงาน</a>
 
 <hr>
 
@@ -49,6 +48,14 @@ a { text-decoration:none; }
 <option value="admin">Admin</option>
 </select>
 
+<select id="employee_type" onchange="toggleType()">
+<option value="fulltime">พนักงานประจำ</option>
+<option value="parttime">พาร์ทไทม์</option>
+</select>
+
+<input id="salary" type="number" placeholder="เงินเดือน (บาท)">
+<input id="daily_wage" type="number" placeholder="ค่าแรง/วัน (บาท)" style="display:none;">
+
 <button class="btn-add" onclick="addEmployee()">เพิ่มพนักงาน</button>
 
 <hr>
@@ -56,21 +63,21 @@ a { text-decoration:none; }
 <h3>👥 รายชื่อพนักงาน</h3>
 
 <table>
-
 <thead>
 <tr>
 <th>ID</th>
 <th>ชื่อ</th>
 <th>Username</th>
 <th>Role</th>
+<th>ประเภท</th>
+<th>เงินเดือน</th>
+<th>ค่าแรง/วัน</th>
 <th>จัดการ</th>
 </tr>
 </thead>
 
 <tbody id="employeeList"></tbody>
-
 </table>
-
 
 <script type="module">
 
@@ -92,14 +99,26 @@ const db = getDatabase(app);
 const employeeRef = ref(db,"employees");
 
 
+// ===== TOGGLE TYPE =====
+window.toggleType = function(){
+ const type=document.getElementById("employee_type").value;
+
+ if(type==="fulltime"){
+   document.getElementById("salary").style.display="block";
+   document.getElementById("daily_wage").style.display="none";
+ }else{
+   document.getElementById("salary").style.display="none";
+   document.getElementById("daily_wage").style.display="block";
+ }
+}
+
+
 // ===== HASH PASSWORD =====
 async function sha256(str){
-
  const buf = await crypto.subtle.digest(
   "SHA-256",
   new TextEncoder().encode(str)
  );
-
  return Array.from(new Uint8Array(buf))
   .map(b=>b.toString(16).padStart(2,"0"))
   .join("");
@@ -114,6 +133,10 @@ window.addEmployee = async function(){
  const password=document.getElementById("password").value;
  const role=document.getElementById("role").value;
 
+ const type=document.getElementById("employee_type").value;
+ const salary=document.getElementById("salary").value || 0;
+ const daily=document.getElementById("daily_wage").value || 0;
+
  if(!fullname || !username || !password){
    alert("กรอกข้อมูลให้ครบ");
    return;
@@ -124,11 +147,13 @@ window.addEmployee = async function(){
    username,
    password: await sha256(password),
    role,
+   employee_type:type,
+   salary:parseInt(salary),
+   daily_wage:parseInt(daily),
    device_id:""
  });
 
  alert("เพิ่มพนักงานแล้ว");
-
 };
 
 
@@ -150,9 +175,12 @@ onValue(employeeRef,(snapshot)=>{
 <td>${row.fullname}</td>
 <td>${row.username}</td>
 <td>${row.role}</td>
+<td>${row.employee_type || '-'}</td>
+<td>${row.salary || 0}</td>
+<td>${row.daily_wage || 0}</td>
 <td>
-<button class="btn-edit" onclick="editEmployee('${key}')">✏️ แก้ไข</button>
-<button class="btn-del" onclick="deleteEmployee('${key}')">🗑️ ลบ</button>
+<button class="btn-edit" onclick="editEmployee('${key}')">✏️</button>
+<button class="btn-del" onclick="deleteEmployee('${key}')">🗑️</button>
 </td>
 </tr>
 `;
@@ -164,11 +192,8 @@ onValue(employeeRef,(snapshot)=>{
 
 // ===== DELETE =====
 window.deleteEmployee=function(id){
-
  if(!confirm("ลบพนักงาน?")) return;
-
  remove(ref(db,"employees/"+id));
-
 };
 
 
@@ -182,32 +207,32 @@ window.editEmployee = async function(id){
  if(!newUser) return;
 
  const newPass = prompt("password ใหม่:");
+ const type = prompt("ประเภท (fulltime / parttime):");
+ const salary = prompt("เงินเดือน:");
+ const daily = prompt("ค่าแรง/วัน:");
 
  let updateData = {
    fullname:newName,
-   username:newUser
+   username:newUser,
+   employee_type:type,
+   salary:parseInt(salary)||0,
+   daily_wage:parseInt(daily)||0
  };
 
  if(newPass){
    updateData.password = await sha256(newPass);
  }
 
- if(confirm("Reset device (ล็อคเครื่องใหม่)?")){
+ if(confirm("Reset device?")){
    updateData.device_id = "";
  }
 
  await update(ref(db,"employees/"+id),updateData);
 
  alert("แก้ไขเรียบร้อย");
-
 };
 
 </script>
 
- 
-
 </body>
 </html>
-
-
-
