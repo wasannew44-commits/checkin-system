@@ -252,7 +252,7 @@ a{
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, onValue, push, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, onValue, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const firebaseConfig = {
   apiKey:"AIzaSyBr6DpIWx4lws1fHvTSoePy5fcthnybZD8",
@@ -363,10 +363,15 @@ function getEmployeeName(empId){
 }
 
 function buildEmployeeSelect(){
+  const currentValue = userSelect.value;
   userSelect.innerHTML = `<option value="">-- เลือกพนักงาน --</option>`;
   Object.entries(employees).forEach(([id, emp])=>{
     userSelect.innerHTML += `<option value="${id}">${emp.fullname}</option>`;
   });
+
+  if(currentValue && employees[currentValue]){
+    userSelect.value = currentValue;
+  }
 }
 
 function buildCommissionEmployeeChecklist(selectedIds=[]){
@@ -431,7 +436,6 @@ function calculateSalary(empId, workDateList){
   const workDays = workDateList.length;
   const offDays = Math.max(0, totalDaysInRange - workDays);
 
-  // พาร์ทไทม์ = จำนวนวันที่มาทำงาน x ค่าแรงรายวัน
   if(emp.employee_type === "parttime"){
     const daily = Number(emp.daily_wage || 0);
     return {
@@ -442,38 +446,13 @@ function calculateSalary(empId, workDateList){
     };
   }
 
-  // พนักงานประจำ = คิดเฉพาะช่วงวันที่เลือก
   const monthlySalary = Number(emp.salary || 0);
   const perDay = monthlySalary / 30;
-
-  // เงินพื้นฐานเฉพาะช่วงวันที่เลือก
   const baseSalaryInRange = perDay * totalDaysInRange;
-
-  // หยุดได้ 1 วัน / สัปดาห์ ตามช่วงวันที่เลือก
   const allowedOffDays = Math.ceil(totalDaysInRange / 7);
-
-  // ถ้าช่วงสั้นกว่า 7 วัน ให้หยุดฟรี 0 วัน
   const deductibleOffDays = Math.max(0, offDays - allowedOffDays);
-
-  // หักเฉพาะวันที่เกินสิทธิ
   const deduction = deductibleOffDays * perDay;
-
   const salaryPay = Math.max(0, baseSalaryInRange - deduction);
-
-  return {
-    salaryPay,
-    offDays,
-    deductibleOffDays,
-    weeksAllowed: allowedOffDays
-  };
-}
-
-  const monthlySalary = Number(emp.salary || 0);
-  const perDay = monthlySalary / 30;
-  const allowedOffDays = Math.ceil(totalDaysInRange / 7);
-  const deductibleOffDays = Math.max(0, offDays - allowedOffDays);
-  const deduction = deductibleOffDays * perDay;
-  const salaryPay = Math.max(0, monthlySalary - deduction);
 
   return {
     salaryPay,
@@ -612,7 +591,7 @@ function render(){
   finalBox.textContent = thaiMoney(finalTotal);
 }
 
-async function autoSelectAttendanceEmployees(){
+function autoSelectAttendanceEmployees(){
   const dateValue = commissionDate.value;
   if(!dateValue){
     alert("กรุณาเลือกวันที่ก่อน");
@@ -735,7 +714,6 @@ saveCommissionBtn.onclick = saveCommission;
 applyMonthBtn.onclick = applyMonthToDateRange;
 clearDateBtn.onclick = clearDateRange;
 
-// ตั้งค่าเดือนปัจจุบันเริ่มต้น
 const now = new Date();
 monthSelect.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
 applyMonthToDateRange();
