@@ -138,6 +138,12 @@ a{
 .small{
   font-size:12px;
 }
+.commission-note{
+  margin-top:8px;
+  font-size:13px;
+  color:#2563eb;
+  font-weight:600;
+}
 </style>
 </head>
 <body>
@@ -200,8 +206,10 @@ a{
   <div class="row">
     <input type="date" id="commissionDate">
     <input type="number" id="cupsSold" placeholder="จำนวนแก้วที่ขายได้">
-    <input type="number" id="totalCommission" placeholder="ค่าคอมรวมของวันนั้น (บาท)">
+    <input type="number" id="totalCommission" readonly placeholder="ค่าคอมรวมของวันนั้น (บาท)">
   </div>
+
+  <div id="commissionPreview" class="commission-note">เรทค่าคอม 2 บาท/แก้ว</div>
 
   <div class="flex">
     <button class="btn-gray" id="loadAttendanceBtn">ดึงคนที่มาเข้างานวันนี้อัตโนมัติ</button>
@@ -268,6 +276,7 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 const WORK_TIME = "08:00:00";
+const COMMISSION_PER_CUP = 2;
 
 const userSelect = document.getElementById("userSelect");
 const monthSelect = document.getElementById("monthSelect");
@@ -287,6 +296,7 @@ const finalBox = document.getElementById("finalBox");
 const commissionDate = document.getElementById("commissionDate");
 const cupsSold = document.getElementById("cupsSold");
 const totalCommission = document.getElementById("totalCommission");
+const commissionPreview = document.getElementById("commissionPreview");
 const commissionEmployeeList = document.getElementById("commissionEmployeeList");
 const loadAttendanceBtn = document.getElementById("loadAttendanceBtn");
 const saveCommissionBtn = document.getElementById("saveCommissionBtn");
@@ -591,6 +601,15 @@ function render(){
   finalBox.textContent = thaiMoney(finalTotal);
 }
 
+function updateCommissionByCups(){
+  const cups = Number(cupsSold.value || 0);
+  const total = cups * COMMISSION_PER_CUP;
+  totalCommission.value = total > 0 ? total : "";
+  commissionPreview.textContent = cups > 0
+    ? `${thaiMoney(cups)} แก้ว x ${thaiMoney(COMMISSION_PER_CUP)} บาท = ${thaiMoney(total)} บาท`
+    : `เรทค่าคอม ${thaiMoney(COMMISSION_PER_CUP)} บาท/แก้ว`;
+}
+
 function autoSelectAttendanceEmployees(){
   const dateValue = commissionDate.value;
   if(!dateValue){
@@ -631,8 +650,13 @@ async function saveCommission(){
     return;
   }
 
+  if(cups <= 0){
+    alert("กรุณาใส่จำนวนแก้ว");
+    return;
+  }
+
   if(total <= 0){
-    alert("กรุณาใส่ค่าคอมรวม");
+    alert("ไม่พบค่าคอมรวม");
     return;
   }
 
@@ -655,12 +679,14 @@ async function saveCommission(){
     cups,
     total_commission: total,
     employees: employeeMap,
-    shares
+    shares,
+    commission_per_cup: COMMISSION_PER_CUP
   });
 
   alert("บันทึกค่าคอมเรียบร้อย");
   cupsSold.value = "";
   totalCommission.value = "";
+  updateCommissionByCups();
   buildCommissionEmployeeChecklist([]);
   render();
 }
@@ -709,6 +735,8 @@ monthSelect.onchange = render;
 startDate.onchange = render;
 endDate.onchange = render;
 
+cupsSold.addEventListener("input", updateCommissionByCups);
+
 loadAttendanceBtn.onclick = autoSelectAttendanceEmployees;
 saveCommissionBtn.onclick = saveCommission;
 applyMonthBtn.onclick = applyMonthToDateRange;
@@ -717,6 +745,7 @@ clearDateBtn.onclick = clearDateRange;
 const now = new Date();
 monthSelect.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
 applyMonthToDateRange();
+updateCommissionByCups();
 </script>
 
 </body>
