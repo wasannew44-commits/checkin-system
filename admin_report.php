@@ -435,11 +435,11 @@ function diffDaysInclusive(start, end){
 
 function calculateSalary(empId, workDateList){
   const emp = employees[empId];
-  if(!emp) return { salaryPay:0, offDays:0, deductibleOffDays:0, weeksAllowed:0 };
+  if(!emp) return { salaryPay:0, offDays:0, deductibleOffDays:0, weeksAllowed:0, extraWorkDays:0 };
 
   const { start, end } = getCurrentRange();
   if(!start || !end){
-    return { salaryPay:0, offDays:0, deductibleOffDays:0, weeksAllowed:0 };
+    return { salaryPay:0, offDays:0, deductibleOffDays:0, weeksAllowed:0, extraWorkDays:0 };
   }
 
   const totalDaysInRange = diffDaysInclusive(start, end);
@@ -452,9 +452,37 @@ function calculateSalary(empId, workDateList){
       salaryPay: workDays * daily,
       offDays,
       deductibleOffDays: 0,
-      weeksAllowed: 0
+      weeksAllowed: 0,
+      extraWorkDays: 0
     };
   }
+
+  const monthlySalary = Number(emp.salary || 0);
+  const perDay = monthlySalary / 30;
+
+  // สิทธิ์หยุด 1 วันต่อสัปดาห์
+  const allowedOffDays = Math.ceil(totalDaysInRange / 7);
+
+  // หยุดเกินสิทธิ์ = หัก
+  const deductibleOffDays = Math.max(0, offDays - allowedOffDays);
+
+  // ไม่ใช้สิทธิ์หยุด = ได้เพิ่ม
+  const extraWorkDays = Math.max(0, allowedOffDays - offDays);
+
+  const baseSalaryInRange = perDay * totalDaysInRange;
+  const deduction = deductibleOffDays * perDay;
+  const extraPay = extraWorkDays * perDay;
+
+  const salaryPay = Math.max(0, baseSalaryInRange - deduction + extraPay);
+
+  return {
+    salaryPay,
+    offDays,
+    deductibleOffDays,
+    weeksAllowed: allowedOffDays,
+    extraWorkDays
+  };
+}
 
   const monthlySalary = Number(emp.salary || 0);
   const perDay = monthlySalary / 30;
