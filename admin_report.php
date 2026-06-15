@@ -484,21 +484,7 @@ function calculateSalary(empId, workDateList){
   };
 }
 
-  const monthlySalary = Number(emp.salary || 0);
-  const perDay = monthlySalary / 30;
-  const baseSalaryInRange = perDay * totalDaysInRange;
-  const allowedOffDays = Math.ceil(totalDaysInRange / 7);
-  const deductibleOffDays = Math.max(0, offDays - allowedOffDays);
-  const deduction = deductibleOffDays * perDay;
-  const salaryPay = Math.max(0, baseSalaryInRange - deduction);
-
-  return {
-    salaryPay,
-    offDays,
-    deductibleOffDays,
-    weeksAllowed: allowedOffDays
-  };
-}
+ 
 
 function getCommissionRowsForEmployee(empId){
   const rows = [];
@@ -620,13 +606,20 @@ function render(){
   const workDateList = getUniqueWorkDates(rows);
   const salaryData = calculateSalary(empId, workDateList);
   const commissionTotal = renderCommissionTable(empId);
-  const finalTotal = salaryData.salaryPay + commissionTotal;
+ const finalTotal = salaryData.salaryPay + commissionTotal;
 
-  workDaysBox.textContent = thaiMoney(workDateList.length);
-  offDaysBox.textContent = thaiMoney(salaryData.offDays);
-  salaryBox.textContent = thaiMoney(salaryData.salaryPay);
-  commissionBox.textContent = thaiMoney(commissionTotal);
-  finalBox.textContent = thaiMoney(finalTotal);
+workDaysBox.textContent = thaiMoney(workDateList.length);
+offDaysBox.textContent = thaiMoney(salaryData.offDays);
+salaryBox.textContent = thaiMoney(salaryData.salaryPay);
+commissionBox.textContent = thaiMoney(commissionTotal);
+finalBox.textContent = thaiMoney(finalTotal);
+
+summary.innerHTML += `
+<br>
+📌 สิทธิ์หยุด: ${salaryData.weeksAllowed} วัน |
+❌ หยุดเกินสิทธิ์: ${salaryData.deductibleOffDays} วัน |
+💰 ทำงานวันหยุดเพิ่ม: ${salaryData.extraWorkDays} วัน
+`;
 }
 
 function updateCommissionByCups(){
