@@ -461,7 +461,7 @@ function calculateSalary(empId, workDateList){
   const perDay = monthlySalary / 30;
 
   // สิทธิ์หยุด 1 วันต่อสัปดาห์
-  const allowedOffDays = Math.ceil(totalDaysInRange / 7);
+  const allowedOffDays = Math.floor(totalDaysInRange / 7);
 
   // หยุดเกินสิทธิ์ = หัก
   const deductibleOffDays = Math.max(0, offDays - allowedOffDays);
